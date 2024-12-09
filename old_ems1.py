@@ -9,17 +9,15 @@ def treeview_data():
     employees = database.fetch_employees()
     tree.delete(*tree.get_children())
     for index, employee in enumerate(employees):
-        tree.insert('', END, values=(*employee, "Editar", "Eliminar"), iid=index)
+        tree.insert('', END, values=employee, iid=index)  # Usamos un índice único para cada fila
         window.update()
-    # Añadir botones a la fila
+        add_action_buttons(index)  # Añadir botones a la fila
 
 
 def add_action_buttons(row_id):
     # Crear los botones de acción para la fila específica
     edit_button = CTkButton(rightFrame, text="Editar", width=80, height=30,command=lambda: edit_record(row_id))
     delete_button = CTkButton(rightFrame, text="Eliminar", width=80, height=30,command=lambda: delete_record(row_id))
-
-
     # Colocarlos en la misma posición que la fila
     tree_row_bbox = tree.bbox(row_id)  # Obtener las coordenadas de la fila
     if tree_row_bbox:
@@ -56,7 +54,8 @@ def edit_record(row_id):
             lista_window.attributes('-topmost', False)  # Restablece la configuración
             messagebox.showerror('Error', 'Seleccione el usuario',parent = lista_window)
         else:
-            database.update(idEntry.get(), nameEntry.get(), phoneEntry.get(), roleBox.get(), genderBox.get(),salaryEntry.get())
+            database.update(idEntry.get(), nameEntry.get(), phoneEntry.get(), roleBox.get(), genderBox.get(),
+                            salaryEntry.get())
             lista_window.attributes('-topmost', True)  # Asegura que la ventana esté al frente
             lista_window.attributes('-topmost', False)  # Restablece la configuración
             messagebox.showinfo('Aviso', 'Se actualizó la información', parent=window)
@@ -279,47 +278,10 @@ def validate_phone(phone):
 
 
 def search_employee():
-    if searchEntry.get()=='':
-        messagebox.showerror('Error','Ingresa un valor para buscar')
-    elif searchBox.get()=='Bucar por':
-        messagebox.showerror('Error','Por favor, selecciona una opción')
-    else:
-        # Obtén el valor mapeado directamente
-        mapped_value = option_map.get(selected_option.get())
-        searched_data = database.search(mapped_value, searchEntry.get())
-        window.update()
-        tree.delete(*tree.get_children())
-        window.update()
-        for employee in searched_data:
-            tree.insert('', END, values=(*employee, "Editar", "Eliminar"))
-            window.update()
-
-
-
-    '''
-    #global button_pressed
     searched_data = database.search(searchEntry.get())
     tree.delete(*tree.get_children())
     for employee in searched_data:
         tree.insert('', END, values=employee)
-'''
-
-def ontreeviewclick(event):
-        # Identificar la fila y columna seleccionadas
-        selected_item = tree.identify_row(event.y)  # Identifica la fila
-        column = tree.identify_column(event.x)  # Identifica la columna
-        if not selected_item:
-            return  # No hacer nada si no se selecciona una fila
-        employee = tree.item(selected_item)['values']  # Obtiene los valores de la fila seleccionada
-        if column == "#7":  # Columna "Editar"
-            edit_record(selected_item)  # Llama a la función para editar el registro
-        elif column == "#8":  # Columna "Eliminar"
-            # Confirma la eliminación con un mensaje
-            confirm = messagebox.askyesno("Confirmar", "¿Deseas eliminar este registro?")
-            if confirm:
-                delete_record(employee[0])  # Llama a la función para eliminar el registro usando el ID
-
-
 
 '''
     if searchEntry.get()=='':
@@ -334,7 +296,7 @@ def ontreeviewclick(event):
         for employee in searched_data:
             tree.insert('', END, values=employee)
             window.update()
-    '''
+'''
 
 
 '''
@@ -345,20 +307,6 @@ def ontreeviewclick(event):
         tree.insert('', END, values=employee)
 '''
 
-
-
-# Diccionario para el mapeo
-option_map = {
-    'CI': 'Id',
-    'Nombre': 'Name',
-    'Teléfono': 'Phone',
-    'Rol': 'Role',
-    'Género': 'Gender',
-    'Salario': 'Salary'
-}
-
-
-
 # Configuración de la ventana principal
 window = CTk()
 window.geometry("0+0")
@@ -368,58 +316,48 @@ window.title("Employee Management System")
 rightFrame = CTkFrame(window)
 rightFrame.grid(row=1, column=0)
 # Entrada de búsqueda
-# Definir las opciones según el idioma
 
-
-selected_option = StringVar()
-selected_option.set("Buscar por")
-
-# Crear ComboBox
-search_options = list(option_map.keys())
-searchBox = CTkComboBox(rightFrame, values=search_options, state='readonly', variable=selected_option)
+search_options=['Id','Name','Phone','Gender','Salary']
+searchBox=CTkComboBox(rightFrame,values=search_options,state='readonly')
 searchBox.grid(row=3,column=0)
 searchBox.set('Buscar por')
-
-
-
 
 searchEntry = CTkEntry(rightFrame, placeholder_text="Buscar por", font=('arial', 25, 'bold'), width=180, height=50)
 searchEntry.grid(row=3, column=1, pady=15, sticky='w')
 
-searchButton = CTkButton(rightFrame, text='Buscar', font=('arial', 25, 'bold'), width=50, height=50,command=search_employee)
+searchButton = CTkButton(rightFrame, text='Buscar', font=('arial', 25, 'bold'), width=180, height=50,command=search_employee)
 #searchButton = CTkButton(rightFrame, text='Buscar', font=('arial', 25, 'bold'), width=180, height=50, command=treeview_data)
 searchButton.grid(row=3, column=2)
 
-addButton = CTkButton(rightFrame, text='Nuevo', font=('arial', 25, 'bold'), width=50, height=50,command=add_employee)
+addButton = CTkButton(rightFrame, text='Nuevo', font=('arial', 25, 'bold'), width=180, height=50,command=add_employee)
 #searchButton = CTkButton(rightFrame, text='Buscar', font=('arial', 25, 'bold'), width=180, height=50, command=treeview_data)
 addButton.grid(row=3, column=3)
 
 
 
 # Configuración del Treeview
-# Configuración del Treeview
 
 tree = ttk.Treeview(rightFrame, height=28)
 tree.grid(row=1, column=0, columnspan=4)
-tree['columns'] = ('CI', 'Nombre', 'Teléfono', 'Rol', 'Género', 'Salario','Edit','Remove')
+tree['columns'] = ('CI', 'Name', 'Phone', 'Role', 'Gender', 'Salary','Edit','Remove')
 tree.heading('CI', text='C.I.')
-tree.heading('Nombre', text='Nombre')
-tree.heading('Teléfono', text='Teléfono')
-tree.heading('Rol', text='Cargo')
-tree.heading('Género', text='Género')
-tree.heading('Salario', text='Salario')
+tree.heading('Name', text='Nombre')
+tree.heading('Phone', text='Teléfono')
+tree.heading('Role', text='Cargo')
+tree.heading('Gender', text='Género')
+tree.heading('Salary', text='Salario')
 tree.heading('Edit', text='')
 tree.heading('Remove', text='')
 
 tree.config(show='headings')
 tree.column('CI', width=130)
-tree.column('Nombre', width=130)
-tree.column('Teléfono', width=130)
-tree.column('Rol', width=130)
-tree.column('Género', width=130)
-tree.column('Salario', width=130)
-tree.column('Edit', width=60)
-tree.column('Remove', width=60)
+tree.column('Name', width=130)
+tree.column('Phone', width=130)
+tree.column('Role', width=130)
+tree.column('Gender', width=130)
+tree.column('Salary', width=130)
+tree.column('Edit', width=130)
+tree.column('Remove', width=130)
 
 # Estilo
 style = ttk.Style()
@@ -431,12 +369,7 @@ scrollBar = ttk.Scrollbar(rightFrame, orient=VERTICAL, command=tree.yview)
 scrollBar.grid(row=1, column=4, sticky='ns')
 tree.config(yscrollcommand=scrollBar.set)
 
-tree.bind("<Button-1>",ontreeviewclick)
-
-
-
 # Cargar datos iniciales
 treeview_data()
-
 window.update()
 window.mainloop()
